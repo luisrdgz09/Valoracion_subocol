@@ -1,0 +1,81 @@
+plugins {
+    id "net.serenity-bdd.serenity-gradle-plugin" version "4.0.0-beta-3"
+    id 'java'
+}
+
+defaultTasks 'clean', 'test', 'aggregate'
+
+repositories {
+    mavenCentral()
+}
+compileJava.options.encoding = 'utf-8'
+tasks.withType(JavaCompile) {
+    options.encoding = 'utf-8'
+}
+
+sourceCompatibility = 16
+targetCompatibility = 16
+
+ext {
+    slf4jVersion = '1.7.7'
+    serenityCoreVersion = '4.0.1'
+    junitVersion = '5.10.0'
+    assertJVersion = '3.23.1'
+    lombokVersion = '1.18.24'
+    logbackVersion = '1.4.12'
+}
+
+dependencies {
+    testImplementation "net.serenity-bdd:serenity-core:${serenityCoreVersion}",
+            "net.serenity-bdd:serenity-junit5:${serenityCoreVersion}",
+            "net.serenity-bdd:serenity-screenplay:${serenityCoreVersion}",
+            "net.serenity-bdd:serenity-screenplay-webdriver:${serenityCoreVersion}",
+            "net.serenity-bdd:serenity-screenplay-rest:${serenityCoreVersion}",
+            "net.serenity-bdd:serenity-ensure:${serenityCoreVersion}",
+            "org.junit.jupiter:junit-jupiter-api:${junitVersion}",
+            "org.junit.jupiter:junit-jupiter-engine:${junitVersion}",
+            "org.assertj:assertj-core:${assertJVersion}",
+            "org.projectlombok:lombok:${lombokVersion}",
+            "ch.qos.logback:logback-classic:${logbackVersion}"
+    compileOnly 'org.projectlombok:lombok:1.18.28'
+    annotationProcessor 'org.projectlombok:lombok:1.18.28'
+    testCompileOnly 'org.projectlombok:lombok:1.18.28'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.28'
+    implementation group: 'net.serenity-bdd', name: 'serenity-screenplay-webdriver', version: '4.0.43'
+    implementation group: 'com.fasterxml.jackson', name: 'jackson-bom', version: '2.15.2', ext: 'pom'
+    implementation group: 'org.postgresql', name: 'postgresql', version: '9.3-1100-jdbc4'
+    implementation group: 'org.json', name: 'json', version: '20201115'
+    implementation group: 'org.apache.poi', name: 'poi-ooxml', version: '5.2.2'
+    implementation 'org.slf4j:slf4j-api:1.7.32'
+    testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.24.2'
+
+
+}
+
+test {
+    useJUnitPlatform()
+    testLogging.showStandardStreams = true
+    systemProperties System.getProperties()
+}
+
+gradle.startParameter.continueOnFailure = true
+
+serenity {
+    reports = ["single-page-html"]
+
+    // // Specify the root package of any JUnit acceptance tests
+    testRoot = "valoration"
+}
+
+test {
+    String itags = project.hasProperty("includeTags") ?
+            project.property("includeTags") : 'regression';
+    String etags = project.hasProperty("excludeTags") ?
+            project.property("excludeTags") : 'acceptance';
+    useJUnitPlatform{
+        includeTags  itags
+        excludeTags  etags
+    }
+}
+
+test.finalizedBy(aggregate)
